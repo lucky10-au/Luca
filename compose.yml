@@ -1,0 +1,21 @@
+services:
+  blog:
+    build: .
+    container_name: blog
+    restart: unless-stopped
+    # Local preview only — Tailscale/LAN, no public ports by default.
+    ports:
+      - "127.0.0.1:2721:80"
+    read_only: true
+
+  # Public via Cloudflare Tunnel — no port-forward, no exposed home IP.
+  # 1. cloudflare dashboard → Zero Trust → Tunnels → create → copy token
+  # 2. token into .env as TUNNEL_TOKEN, hostname → blog:80
+  # 3. docker compose up -d tunnel
+  # tunnel:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: blog-tunnel
+  #   restart: unless-stopped
+  #   command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
+  #   environment:
+  #     TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env}
