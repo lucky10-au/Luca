@@ -10,8 +10,10 @@ SVG art in `img/`. Live at https://lucky10-au.github.io via GitHub Pages
 - `writing.html`, `about.html` — article-style pages
 - `posts/` — one HTML file per post (`hello-world.html` is the template)
 - `img/` — SVG placeholders; swap same filenames for real art
-- `Dockerfile` / `Caddyfile` / `compose.yml` — self-host alternative (unused by Pages)
-- `serve.py` — local preview server on :2720 (`systemctl --user status blog`)
+- `serve.py` — local preview server on :2720 (`systemctl --user status blog`; dev only, Pages ignores it)
+- NOTE 2026-10-01: self-host production files (`Dockerfile`, `Caddyfile`,
+  `compose.yml`) were deliberately deleted — Pages is the deploy target. Do
+  not reintroduce without owner approval.
 
 ## Invariants future agents must respect
 1. **Absolute paths** (`/style.css`, `/img/…`, `/posts/…`) only work because

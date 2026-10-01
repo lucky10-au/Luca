@@ -5,13 +5,14 @@
 systemctl --user status blog          # python http.server on :2720
 # open http://<tailscale-ip>:2720 — add to ~/landing/index.html if you want it listed
 
-## Public options (recommended over exposing this laptop)
-1. **Best:** `git init && git add .` → push to GitHub → Cloudflare Pages / GitHub Pages → add your domain (CNAME). Free, CDN, auto-TLS.
-2. **Self-host via Tunnel:** `cp .env.example .env` (add token), `docker compose up -d tunnel`. No port-forward needed.
-3. **VPS:** same compose.yml works on any $5 VPS with your domain's A record.
+## Deploy
+Push to `main` → GitHub Pages rebuilds (~1–2 min) at https://lucky10-au.github.io.
 
 ## Files
-- index.html — hero, work, about, writing, contact (edit text in place)
-- style.css — one palette, system fonts
-- posts/hello-world.html — template: copy per post, add a row in index.html
-- Dockerfile / Caddyfile / compose.yml — prod serving (read-only, static only)
+- index.html — home: hero, about, projects carousel, writing list
+- projects.html — project grid · writing.html / about.html — article pages
+- style.css — one palette, system fonts (bump `?v=N` in all HTML on change — see AGENTS.md)
+- posts/ — one HTML file per post (`hello-world.html` is the template)
+- img/ — SVG placeholders, swap same filenames for real art
+- serve.py — local preview server on :2720 (dev only, not used by Pages)
+- AGENTS.md — maintainer notes for future agents
