@@ -6,7 +6,7 @@ systemctl --user status blog          # python http.server on :2720
 # open http://<tailscale-ip>:2720 — add to ~/landing/index.html if you want it listed
 
 ## Deploy
-Push to `main` → GitHub Pages rebuilds (~1–2 min) at https://lucky10-au.github.io.
+Push to `main` → GitHub Pages rebuilds (~1–2 min) at https://lucky10-au.github.io/Luca/.
 
 ## Files
 - index.html — home: hero, about, projects carousel, writing list
