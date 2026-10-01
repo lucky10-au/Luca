@@ -11,6 +11,19 @@ SVG art in `img/`. Live at https://lucky10-au.github.io/Luca/ via GitHub Pages
 - `posts/` — one HTML file per post (`hello-world.html` is the template)
 - `img/` — SVG placeholders; swap same filenames for real art
 - `serve.py` — local preview server on :2720 (`systemctl --user status blog`; dev only, Pages ignores it)
+- `content.json` — THE copy source: every visible string on the site, keyed
+  by path (`site.brand`, `projects.items.0.name`, …). Edit this file (or use
+  `/admin.html`) to change any text. Pretty-printed; keep it that way.
+- `content.js` — loader that overrides `[data-content]` elements from the
+  JSON. HTML text is fallback-only and must match the JSON (it is the
+  no-JS rendering).
+- `admin.html` + `admin.js` — private on-site CMS, NOT in the nav. Edits
+  text, publishes projects/posts straight to the repo via the Contents API
+  (one commit per file). Auth token lives in the visitor's browser
+  localStorage ONLY — never commit one. Needs Contents read+write
+  (classic: `public_repo`). Insert markers `ADMIN:CAROUSEL-END`,
+  `ADMIN:GRID-END`, `ADMIN:WRITING-END` must stay exactly where they are or
+  admin inserts fail loudly.
 - NOTE 2026-10-01: self-host production files (`Dockerfile`, `Caddyfile`,
   `compose.yml`) were deliberately deleted — Pages is the deploy target. Do
   not reintroduce without owner approval.
@@ -32,7 +45,8 @@ SVG art in `img/`. Live at https://lucky10-au.github.io/Luca/ via GitHub Pages
    real-browser (Playwright/Chromium) reproduction. Test rig lives in
    `/tmp/cartest` (not committed).
 4. No footers, no contact page, no dark-mode toggle — all removed per owner
-   request. Site-wide dark palette lives in `:root` in `style.css`.
+   request. Strict black-and-white light theme lives in `:root` in
+   `style.css` (no chromatic colors anywhere; placeholder art is grayscale).
 
 ## Reminder
 If you make a drastic change (hosting, routing, paths, carousel rewrite,

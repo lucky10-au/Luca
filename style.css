@@ -1,4 +1,4 @@
-:root { color-scheme: dark; --ink:#ececec; --muted:#9c9c9c; --line:#2b2b2b; --accent:#6ea8fe; --bg:#101010; --body:#c9c9c9; }
+:root { color-scheme: light; --ink:#000; --muted:#666; --line:#e2e2e2; --accent:#000; --bg:#fff; --body:#111; }
 * { box-sizing: border-box; margin: 0; }
 img { border-radius: 8px; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); padding: 40px 24px 80px; -webkit-font-smoothing: antialiased; }

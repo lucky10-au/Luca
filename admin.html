@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Site admin — Luca</title>
+<meta name="description" content="Private admin page for Luca's site. Not linked from anywhere.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css?v=12">
+<style>
+  .admin label { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 4px; }
+  .admin input[type=text], .admin input[type=password], .admin textarea, .admin select {
+    width: 100%; font: inherit; font-size: 14px; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 10px; box-sizing: border-box; }
+  .admin textarea { min-height: 88px; resize: vertical; }
+  .admin button { font: inherit; font-size: 14px; margin-top: 14px; padding: 8px 18px;
+    border-radius: 999px; border: 1px solid var(--ink); background: var(--ink);
+    color: var(--bg); cursor: pointer; }
+  .admin button:disabled { opacity: .4; cursor: default; }
+  .admin button.ghost { background: none; color: var(--ink); border-color: var(--line); }
+  #log { white-space: pre-wrap; font-size: 13px; border: 1px solid var(--line);
+    border-radius: 8px; padding: 10px 12px; margin-top: 24px; min-height: 60px; }
+  #fields label { font-family: monospace; font-size: 12px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main class="admin">
+  <header class="site-head">
+    <a class="brand" href="./">Luca</a>
+    <nav>
+      <a href="projects.html">Work</a>
+      <a href="about.html">About</a>
+      <a href="writing.html">Writing</a>
+    </nav>
+  </header>
+
+  <section class="page-head">
+    <h1>Site admin</h1>
+    <p>Not linked from anywhere — open this page directly. Changes commit
+    straight to the repo and go live in a minute or two.</p>
+  </section>
+
+  <section id="auth">
+    <h2>Access token</h2>
+    <p>Needs a token with <strong>Contents read &amp; write</strong> on this
+    repo (classic token: <strong>public_repo</strong> scope). It lives only
+    in this browser's local storage — never in the repo.</p>
+    <label for="token">Token</label>
+    <input type="password" id="token" autocomplete="off" placeholder="ghp_…">
+    <div>
+      <button id="token-save" type="button">Save token</button>
+      <button id="token-clear" class="ghost" type="button">Forget</button>
+    </div>
+    <p id="token-status"></p>
+  </section>
+
+  <section id="text">
+    <h2>Site text</h2>
+    <p>Every string from <code>content.json</code>. Edit, save, done.</p>
+    <div id="fields"><p>Loading…</p></div>
+    <button id="save-text" type="button">Save text</button>
+  </section>
+
+  <section id="project">
+    <h2>New project</h2>
+    <div class="row2">
+      <div><label for="p-name">Name</label><input type="text" id="p-name" placeholder="Project Eight"></div>
+      <div><label for="p-meta">Meta line</label><input type="text" id="p-meta" placeholder="Product design — 2027"></div>
+    </div>
+    <div class="row2">
+      <div><label for="p-img">Image (existing)</label><select id="p-img"></select></div>
+      <div><label for="p-upload">…or upload new</label><input type="file" id="p-upload" accept=".png,.jpg,.jpeg,.gif,.webp,.svg"></div>
+    </div>
+    <label for="p-body1">Paragraph 1</label><textarea id="p-body1"></textarea>
+    <label for="p-body2">Paragraph 2</label><textarea id="p-body2"></textarea>
+    <button id="save-project" type="button">Publish project</button>
+  </section>
+
+  <section id="post">
+    <h2>New post</h2>
+    <div class="row2">
+      <div><label for="w-title">Title</label><input type="text" id="w-title" placeholder="Something new"></div>
+      <div><label for="w-meta">Meta line</label><input type="text" id="w-meta" placeholder="Oct 2026"></div>
+    </div>
+    <div class="row2">
+      <div><label for="w-hero">Hero image (existing)</label><select id="w-hero"></select></div>
+      <div><label for="w-upload">…or upload new</label><input type="file" id="w-upload" accept=".png,.jpg,.jpeg,.gif,.webp,.svg"></div>
+    </div>
+    <label for="w-body">Paragraphs (blank line between each)</label><textarea id="w-body"></textarea>
+    <button id="save-post" type="button">Publish post</button>
+  </section>
+
+  <pre id="log" aria-live="polite"></pre>
+</main>
+<script src="admin.js" defer></script>
+</body>
+</html>

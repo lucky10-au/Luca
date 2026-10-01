@@ -3,27 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hello, world — Luca</title>
+<title data-content="tabs.hello-world">Hello, world — Luca</title>
 <meta name="description" content="First post.">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="../style.css?v=12">
+<script src="../content.js" defer></script>
 </head>
 <body>
 <main>
   <header class="site-head">
-    <a class="brand" href="../">Luca</a>
+    <a class="brand" href="../" data-content="site.brand">Luca</a>
     <nav>
-      <a href="../projects.html">Work</a>
-      <a href="../about.html">About</a>
-      <a href="../writing.html">Writing</a>
+      <a href="../projects.html" data-content="site.nav.work">Work</a>
+      <a href="../about.html" data-content="site.nav.about">About</a>
+      <a href="../writing.html" data-content="site.nav.writing">Writing</a>
     </nav>
   </header>
   <article>
     <img class="hero-img" src="../img/post-hero.svg" alt="">
-    <h1>Hello, world</h1>
-    <time>Sep 28, 2026</time>
-    <p>This is a sample post. To write a new one, copy this file, swap the top image, change the title and date, write in plain HTML, and add one row to the Writing section in <code>index.html</code>.</p>
-    <p>Second paragraph goes here. Keep posts short — one idea, a few hundred words, one image max.</p>
+    <h1 data-content="posts.hello-world.title">Hello, world</h1>
+    <time data-content="posts.hello-world.meta">Sep 28, 2026</time>
+    <p data-content="posts.hello-world.body1">This is a sample post. To write a new one, copy this file, swap the top image, change the title and date, write in plain HTML, and add one row to the Writing section in <code>index.html</code>.</p>
+    <p data-content="posts.hello-world.body2">Second paragraph goes here. Keep posts short — one idea, a few hundred words, one image max.</p>
   </article>
 </main>
 </body>

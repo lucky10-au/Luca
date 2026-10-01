@@ -1,0 +1,143 @@
+{
+  "about": {
+    "body1": "Longer version of who you are and how you work. A few paragraphs beats a resume — cover where you've been, what you're good at, and what you're looking for next.",
+    "body2": "Second paragraph: your process, your influences, the kind of projects that excite you. Link out to the <a href=\"projects.html\">work</a> and <a href=\"writing.html\">writing</a> for proof.",
+    "title": "About"
+  },
+  "home": {
+    "about": {
+      "body": "Short paragraph: who you are, what you're good at, how you work. Two or three sentences beats a wall of text — link out to the blog for the long version.",
+      "heading": "About",
+      "skills": [
+        "Product design",
+        "Design systems",
+        "Prototyping",
+        "Front-end",
+        "Writing",
+        "Research"
+      ]
+    },
+    "hero": "Hi, I'm <em>Luca</em>.<br>A designer & developer crafting calm, useful things.",
+    "projects": {
+      "heading": "Projects"
+    },
+    "writing": {
+      "heading": "Writing",
+      "row": {
+        "meta": "Sep 2026 — first post",
+        "title": "Hello, world"
+      }
+    }
+  },
+  "posts": {
+    "hello-world": {
+      "body1": "This is a sample post. To write a new one, copy this file, swap the top image, change the title and date, write in plain HTML, and add one row to the Writing section in <code>index.html</code>.",
+      "body2": "Second paragraph goes here. Keep posts short — one idea, a few hundred words, one image max.",
+      "meta": "Sep 28, 2026",
+      "title": "Hello, world"
+    },
+    "project-five": {
+      "body1": "What was the problem, who was it for, and what did you do. Replace this with the real story of Project Five.",
+      "body2": "Second paragraph: process, decisions, outcome. One or two images max — add more with additional <code>&lt;img&gt;</code> tags reusing the hero style.",
+      "meta": "Mobile app — 2024",
+      "title": "Project Five"
+    },
+    "project-four": {
+      "body1": "What was the problem, who was it for, and what did you do. Replace this with the real story of Project Four.",
+      "body2": "Second paragraph: process, decisions, outcome. One or two images max — add more with additional <code>&lt;img&gt;</code> tags reusing the hero style.",
+      "meta": "Open source — 2024",
+      "title": "Project Four"
+    },
+    "project-one": {
+      "body1": "What was the problem, who was it for, and what did you do. Replace this with the real story of Project One.",
+      "body2": "Second paragraph: process, decisions, outcome. One or two images max — add more with additional <code>&lt;img&gt;</code> tags reusing the hero style.",
+      "meta": "Product design — 2026",
+      "title": "Project One"
+    },
+    "project-seven": {
+      "body1": "What was the problem, who was it for, and what did you do. Replace this with the real story of Project Seven.",
+      "body2": "Second paragraph: process, decisions, outcome. One or two images max — add more with additional <code>&lt;img&gt;</code> tags reusing the hero style.",
+      "meta": "Illustration — 2023",
+      "title": "Project Seven"
+    },
+    "project-six": {
+      "body1": "What was the problem, who was it for, and what did you do. Replace this with the real story of Project Six.",
+      "body2": "Second paragraph: process, decisions, outcome. One or two images max — add more with additional <code>&lt;img&gt;</code> tags reusing the hero style.",
+      "meta": "Dashboard — 2023",
+      "title": "Project Six"
+    },
+    "project-three": {
+      "body1": "What was the problem, who was it for, and what did you do. Replace this with the real story of Project Three.",
+      "body2": "Second paragraph: process, decisions, outcome. One or two images max — add more with additional <code>&lt;img&gt;</code> tags reusing the hero style.",
+      "meta": "Experiment — 2025",
+      "title": "Project Three"
+    },
+    "project-two": {
+      "body1": "What was the problem, who was it for, and what did you do. Replace this with the real story of Project Two.",
+      "body2": "Second paragraph: process, decisions, outcome. One or two images max — add more with additional <code>&lt;img&gt;</code> tags reusing the hero style.",
+      "meta": "Brand & web — 2025",
+      "title": "Project Two"
+    }
+  },
+  "projects": {
+    "heading": "Projects",
+    "intro": "Analytical thinking and design craft, from flows to pixels. Replace this with one or two sentences of your own.",
+    "items": [
+      {
+        "meta": "Product design — 2026",
+        "name": "Project One"
+      },
+      {
+        "meta": "Brand & web — 2025",
+        "name": "Project Two"
+      },
+      {
+        "meta": "Experiment — 2025",
+        "name": "Project Three"
+      },
+      {
+        "meta": "Open source — 2024",
+        "name": "Project Four"
+      },
+      {
+        "meta": "Mobile app — 2024",
+        "name": "Project Five"
+      },
+      {
+        "meta": "Dashboard — 2023",
+        "name": "Project Six"
+      },
+      {
+        "meta": "Illustration — 2023",
+        "name": "Project Seven"
+      }
+    ],
+    "title": "My work"
+  },
+  "site": {
+    "brand": "Luca",
+    "nav": {
+      "about": "About",
+      "work": "Work",
+      "writing": "Writing"
+    }
+  },
+  "writing": {
+    "note": "Posts coming soon.",
+    "title": "Writing"
+  },
+  "tabs": {
+    "home": "Luca — Designer / Developer",
+    "projects": "Work — Luca",
+    "writing": "Writing — Luca",
+    "about": "About — Luca",
+    "hello-world": "Hello, world — Luca",
+    "project-one": "Project One — Luca",
+    "project-two": "Project Two — Luca",
+    "project-three": "Project Three — Luca",
+    "project-four": "Project Four — Luca",
+    "project-five": "Project Five — Luca",
+    "project-six": "Project Six — Luca",
+    "project-seven": "Project Seven — Luca"
+  }
+}

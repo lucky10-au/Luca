@@ -3,26 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>About — Luca</title>
+<title data-content="tabs.about">About — Luca</title>
 <meta name="description" content="About Luca.">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css?v=12">
+<script src="content.js" defer></script>
 </head>
 <body>
 <main>
   <header class="site-head">
-    <a class="brand" href="./">Luca</a>
+    <a class="brand" href="./" data-content="site.brand">Luca</a>
     <nav>
-      <a href="projects.html">Work</a>
-      <a href="about.html">About</a>
-      <a href="writing.html">Writing</a>
+      <a href="projects.html" data-content="site.nav.work">Work</a>
+      <a href="about.html" data-content="site.nav.about">About</a>
+      <a href="writing.html" data-content="site.nav.writing">Writing</a>
     </nav>
   </header>
   <article>
     <img class="hero-img" src="img/about-hero.svg" alt="">
-    <h1>About</h1>
-    <p>Longer version of who you are and how you work. A few paragraphs beats a resume — cover where you've been, what you're good at, and what you're looking for next.</p>
-    <p>Second paragraph: your process, your influences, the kind of projects that excite you. Link out to the <a href="projects.html">work</a> and <a href="writing.html">writing</a> for proof.</p>
+    <h1 data-content="about.title">About</h1>
+    <p data-content="about.body1">Longer version of who you are and how you work. A few paragraphs beats a resume — cover where you've been, what you're good at, and what you're looking for next.</p>
+    <p data-content="about.body2">Second paragraph: your process, your influences, the kind of projects that excite you. Link out to the <a href="projects.html">work</a> and <a href="writing.html">writing</a> for proof.</p>
   </article>
 </main>
 </body>
