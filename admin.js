@@ -74,6 +74,23 @@ async function putFile(path, text, sha, message) {
 function slugify(s) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "untitled";
 }
+// Which page holds a content key? tab slugs map to their pages,
+// projects.* to the grid page, everything else to its section page.
+function pageFor(key) {
+  var m = key.match(/^posts\.([^.]+)/);
+  if (m) return "posts/" + m[1] + ".html";
+  if (key.indexOf("projects.") === 0) return "projects.html";
+  if (key.indexOf("home.") === 0 || key.indexOf("site.") === 0) return "index.html";
+  if (key.indexOf("about.") === 0) return "about.html";
+  if (key.indexOf("writing.") === 0) return "writing.html";
+  m = key.match(/^tabs\.(.+)$/);
+  if (m) {
+    if (m[1] === "home") return "index.html";
+    if (m[1] === "projects" || m[1] === "writing" || m[1] === "about") return m[1] + ".html";
+    return "posts/" + m[1] + ".html";
+  }
+  return "index.html";
+}
 async function readUpload(input) {
   if (!input.files || !input.files[0]) return null;
   var f = input.files[0];
@@ -195,7 +212,13 @@ async function loadText() {
   box.textContent = "";
   Object.keys(m).sort().forEach(function (k) {
     var lab = document.createElement("label");
-    lab.textContent = k;
+    var a = document.createElement("a");
+    a.href = pageFor(k) + "#hl=" + encodeURIComponent(k);
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.title = "Open this text on the site, highlighted";
+    a.textContent = k;
+    lab.appendChild(a);
     lab.setAttribute("for", "f-" + k);
     var inp = (String(m[k]).length > 100 || String(m[k]).indexOf("\n") !== -1)
       ? document.createElement("textarea") : document.createElement("input");

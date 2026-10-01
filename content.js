@@ -21,4 +21,29 @@
       else el.innerHTML = v;
     });
   }).catch(function () { /* fallback text stays */ });
+
+  /* Deep-link highlight: page.html#hl=some.key scrolls that string into
+     view and flashes it. Used by the admin panel's key links. */
+  window.addEventListener("load", function () {
+    setTimeout(function () {
+      var m = location.hash.match(/hl=([^&]+)/);
+      if (!m) return;
+      var key = decodeURIComponent(m[1]);
+      if (/["\\]/.test(key)) return;
+      var el = document.querySelector('[data-content="' + key + '"]');
+      if (!el || el.tagName === "TITLE" || el.tagName === "META") {
+        el = document.querySelector("article h1, .page-head h1, .hero h1");
+      }
+      if (!el) return;
+      var st = document.createElement("style");
+      st.textContent = ".hl-flash{outline:3px solid #000 !important;outline-offset:5px;}";
+      document.head.appendChild(st);
+      try { el.scrollIntoView({ block: "center" }); } catch (e) {}
+      el.classList.add("hl-flash");
+      setTimeout(function () {
+        el.classList.remove("hl-flash");
+        if (st.parentNode) st.parentNode.removeChild(st);
+      }, 2800);
+    }, 150);
+  });
 })();

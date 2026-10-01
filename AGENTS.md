@@ -28,6 +28,11 @@ SVG art in `img/`. Live at https://lucky10-au.github.io/Luca/ via GitHub Pages
   publishes ask for confirmation, and the page is `noindex`. Insert
   markers `ADMIN:CAROUSEL-END`, `ADMIN:GRID-END`, `ADMIN:WRITING-END` must
   stay exactly where they are or admin inserts fail loudly.
+- Admin text-tab keys render as links (`page#hl=dotted.key`, new tab) that
+  open the string's exact spot on the site, scrolled into view and outlined
+  ~3s (highlight block at the end of `content.js`; falls back to the page
+  h1 for `<title>` keys). Key→page mapping lives in `pageFor()` in
+  `admin.js`.
 - NOTE 2026-10-01: self-host production files (`Dockerfile`, `Caddyfile`,
   `compose.yml`) were deliberately deleted — Pages is the deploy target. Do
   not reintroduce without owner approval.
