@@ -128,23 +128,60 @@ function needToken() {
   return true;
 }
 
-// ---- auth UI ----
-function refreshAuth() {
-  var has = !!token();
-  $("token-status").textContent = has ? "token saved in this browser" : "no token";
-  ["save-text", "save-project", "save-post"].forEach(function (id) { $(id).disabled = !has; });
+// ---- auth: panel stays hidden until a token verifies against GitHub ----
+var lockTimer = null;
+function setLocked(locked, msg) {
+  ["text", "project", "post"].forEach(function (id) { $(id).hidden = locked; });
+  ["save-text", "save-project", "save-post"].forEach(function (id) { $(id).disabled = locked; });
+  if (msg) log(msg);
 }
-$("token-save").onclick = function () {
+function disarmLock() { if (lockTimer) { clearTimeout(lockTimer); lockTimer = null; } }
+function armLock() {
+  disarmLock();
+  lockTimer = setTimeout(function () {
+    localStorage.removeItem("blog-admin-token");
+    setLocked(true);
+    $("token-status").textContent = "locked after 15 idle minutes — enter the token again";
+    log("auto-locked after 15 idle minutes");
+  }, 15 * 60 * 1000);
+}
+["click", "keydown"].forEach(function (ev) {
+  document.addEventListener(ev, function () { if (token()) armLock(); },
+    { capture: true, passive: true });
+});
+async function verify() {
+  if (!token()) {
+    setLocked(true);
+    $("token-status").textContent = "no token";
+    return false;
+  }
+  try {
+    var r = await fetch("https://api.github.com/rate_limit",
+      { headers: { "Authorization": "Bearer " + token() } });
+    if (!r.ok) throw new Error("GitHub rejected the token (HTTP " + r.status + ")");
+    setLocked(false);
+    $("token-status").textContent = "token verified — unlocked";
+    armLock();
+    return true;
+  } catch (e) {
+    setLocked(true);
+    $("token-status").textContent = "offline or rejected token";
+    log("ERROR: " + e.message);
+    return false;
+  }
+}
+$("token-save").onclick = async function () {
   var v = $("token").value.trim();
   if (!v) return;
   localStorage.setItem("blog-admin-token", v);
   $("token").value = "";
-  refreshAuth();
-  log("token saved");
+  await verify();
 };
 $("token-clear").onclick = function () {
   localStorage.removeItem("blog-admin-token");
-  refreshAuth();
+  disarmLock();
+  setLocked(true);
+  $("token-status").textContent = "no token";
   log("token forgotten");
 };
 
@@ -215,6 +252,7 @@ $("save-project").onclick = async function () {
     var slug = slugify(name);
     var up = await readUpload($("p-upload"));
     var img = up ? up.name : $("p-img").value;
+    if (!confirm("Publish project \"" + name + "\"? This writes several commits to the repo.")) return;
     var paras = [$("p-body1").value.trim(), $("p-body2").value.trim()].filter(Boolean);
     if (!paras.length) throw new Error("at least one paragraph is required");
     // slug must be free (post file + content.json entry)
@@ -261,6 +299,7 @@ $("save-post").onclick = async function () {
     var slug = slugify(title);
     var up = await readUpload($("w-upload"));
     var img = up ? up.name : $("w-hero").value;
+    if (!confirm("Publish post \"" + title + "\"? This writes several commits to the repo.")) return;
     var paras = $("w-body").value.split(/\n\s*\n/).map(function (s) { return s.trim(); }).filter(Boolean);
     if (!paras.length) throw new Error("at least one paragraph is required");
     try { await api("GET", "posts/" + slug + ".html?ref=" + BRANCH); throw new Error("slug posts/" + slug + ".html already exists"); }
@@ -289,7 +328,9 @@ $("save-post").onclick = async function () {
   } catch (e) { log("ERROR: " + e.message); }
 };
 
-refreshAuth();
+setLocked(true);
+$("token-status").textContent = "checking token…";
+verify();
 loadImages().catch(function (e) { log("ERROR: " + e.message); });
 loadText().catch(function (e) {
   $("fields").innerHTML = "<p>Could not load content.json: " + esc(e.message) + "</p>";

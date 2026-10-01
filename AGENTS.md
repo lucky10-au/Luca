@@ -19,11 +19,15 @@ SVG art in `img/`. Live at https://lucky10-au.github.io/Luca/ via GitHub Pages
   no-JS rendering).
 - `admin.html` + `admin.js` — private on-site CMS, NOT in the nav. Edits
   text, publishes projects/posts straight to the repo via the Contents API
-  (one commit per file). Auth token lives in the visitor's browser
-  localStorage ONLY — never commit one. Needs Contents read+write
-  (classic: `public_repo`). Insert markers `ADMIN:CAROUSEL-END`,
-  `ADMIN:GRID-END`, `ADMIN:WRITING-END` must stay exactly where they are or
-  admin inserts fail loudly.
+  (one commit per file). Security model (be honest about it): the page
+  itself is public — any JS gate is obscurity. The real boundary is the
+  GitHub token, enforced server-side by GitHub: keep it repo-scoped and
+  minimal (Contents read+write on this repo only), it lives in the
+  visitor's browser localStorage ONLY (never commit one), the panel stays
+  hidden until the token verifies, it auto-locks after 15 idle minutes,
+  publishes ask for confirmation, and the page is `noindex`. Insert
+  markers `ADMIN:CAROUSEL-END`, `ADMIN:GRID-END`, `ADMIN:WRITING-END` must
+  stay exactly where they are or admin inserts fail loudly.
 - NOTE 2026-10-01: self-host production files (`Dockerfile`, `Caddyfile`,
   `compose.yml`) were deliberately deleted — Pages is the deploy target. Do
   not reintroduce without owner approval.

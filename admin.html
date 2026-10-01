@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Site admin — Luca</title>
 <meta name="description" content="Private admin page for Luca's site. Not linked from anywhere.">
+<meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css?v=12">
 <style>
@@ -45,9 +46,12 @@
 
   <section id="auth">
     <h2>Access token</h2>
-    <p>Needs a token with <strong>Contents read &amp; write</strong> on this
-    repo (classic token: <strong>public_repo</strong> scope). It lives only
-    in this browser's local storage — never in the repo.</p>
+    <p>Needs a token with <strong>Contents read &amp; write on this repo
+    only</strong> (classic token: <strong>public_repo</strong> scope, short
+    expiry). It lives only in this browser's local storage, the panel stays
+    hidden until the token verifies, and it auto-locks after 15 idle minutes.
+    Real security comes from the token + token scope — this page itself is
+    public, like everything on a static site.</p>
     <label for="token">Token</label>
     <input type="password" id="token" autocomplete="off" placeholder="ghp_…">
     <div>
@@ -57,14 +61,14 @@
     <p id="token-status"></p>
   </section>
 
-  <section id="text">
+  <section id="text" hidden>
     <h2>Site text</h2>
     <p>Every string from <code>content.json</code>. Edit, save, done.</p>
     <div id="fields"><p>Loading…</p></div>
     <button id="save-text" type="button">Save text</button>
   </section>
 
-  <section id="project">
+  <section id="project" hidden>
     <h2>New project</h2>
     <div class="row2">
       <div><label for="p-name">Name</label><input type="text" id="p-name" placeholder="Project Eight"></div>
@@ -79,7 +83,7 @@
     <button id="save-project" type="button">Publish project</button>
   </section>
 
-  <section id="post">
+  <section id="post" hidden>
     <h2>New post</h2>
     <div class="row2">
       <div><label for="w-title">Title</label><input type="text" id="w-title" placeholder="Something new"></div>
