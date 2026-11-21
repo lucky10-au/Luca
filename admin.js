@@ -163,7 +163,7 @@ function postPage(o) {
     "  <article>\n    <img class=\"hero-img\" src=\"../img/" + o.img + "\" alt=\"\">\n" +
     "    <h1 data-content=\"posts." + o.slug + ".title\">" + esc(o.title) + "</h1>\n" +
     "    <time data-content=\"posts." + o.slug + ".meta\">" + esc(o.meta) + "</time>\n" + body + "\n" +
-    "  </article>\n</main>\n<script src=\"../content.js\" defer><\/script>\n</body>\n</html>\n";
+    "  </article>\n</main>\n<script src=\"../content.js?v=13\" defer><\/script>\n</body>\n</html>\n";
 }
 function carouselFigure(o, i) {
   return "      <figure>\n" +

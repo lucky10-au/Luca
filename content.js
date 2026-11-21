@@ -11,7 +11,7 @@
     }
     return out;
   }
-  fetch(base + "content.json").then(function (r) { return r.json(); }).then(function (j) {
+  fetch(base + "content.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (j) {
     var m = flat(j);
     document.querySelectorAll("[data-content]").forEach(function (el) {
       var v = m[el.getAttribute("data-content")];

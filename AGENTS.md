@@ -50,9 +50,12 @@ SVG art in `img/`. Live at https://lucky10-au.github.io/Luca/ via GitHub Pages
    `lucky10-au.github.io` → `Luca` (project sites serve from a subpath, so
    absolute paths would 404). Keep them relative — works on user sites,
    project sites, custom domains, and local preview alike.
-2. **CSS cache-busting is manual.** `serve.py` sends `no-cache` locally, but
-   GitHub Pages does not run `serve.py`. Every `style.css` change MUST bump
-   the `?v=N` query in ALL HTML files or production visitors see stale styles.
+2. **Cache-busting is manual.** `serve.py` sends `no-cache` locally, but
+   GitHub Pages serves HTML, CSS and JS with `cache-control: max-age=600`.
+   Every `style.css` or `content.js` change MUST bump the `?v=N` query in ALL
+   HTML files (currently `v=12` for style.css, `v=13` for content.js) or
+   visitors see stale files for ten minutes. `content.json` is fetched at
+   runtime with a timestamp + `no-store`, so text saves appear immediately.
 3. **Carousel** (`index.html` `<script>`): 31× cloned set for the infinite
    loop, teleports on scroll-settle ONLY (never mid-gesture — that caused
    flicker twice), 3-frame stability hysteresis on the featured card,
