@@ -10,7 +10,34 @@ var GRID_END = "      <!-- ADMIN:GRID-END -->";
 var WRITING_END = "    <!-- ADMIN:WRITING-END -->";
 
 function $(id) { return document.getElementById(id); }
-function log(m) { $("log").textContent += m + "\n"; }
+function log(m) {
+  var el = $("log");
+  el.textContent += m + "\n";
+  el.scrollTop = el.scrollHeight;
+}
+// Toast: errors used to be written to #log only, which sits below the fold,
+// so a failed save looked like nothing happened.
+var statusTimer = null;
+function status(msg, kind) {
+  var el = $("status");
+  if (!el) return;
+  clearTimeout(statusTimer);
+  el.textContent = msg || "";
+  el.className = kind || "";
+  el.hidden = !msg;
+  if (msg) statusTimer = setTimeout(function () { el.hidden = true; }, 9000);
+}
+function busy(btn, on, label) {
+  if (!btn) return;
+  if (on) {
+    btn.setAttribute("data-label", btn.textContent);
+    btn.textContent = label || "Working…";
+    btn.disabled = true;
+  } else {
+    btn.textContent = btn.getAttribute("data-label") || btn.textContent;
+    btn.disabled = false;
+  }
+}
 function esc(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;")
           .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -31,19 +58,28 @@ function flat(o, p, out) {
   }
   return out;
 }
-function mergeInto(orig, m) {
-  // Write every edited leaf back into a deep clone, preserving the file's
-  // key order so saves produce minimal diffs.
-  var o = JSON.parse(JSON.stringify(orig));
-  Object.keys(m).forEach(function (path) {
-    var parts = path.split("."), cur = o;
-    for (var i = 0; i < parts.length - 1; i++) {
-      var p = (cur instanceof Array) ? +parts[i] : parts[i];
-      cur = cur[p];
+function setPath(o, path, v) {
+  // Walk/create every segment. The old version threw a TypeError when a key
+  // had been removed on GitHub since the form was built, which aborted the
+  // whole save with an unhelpful message.
+  var parts = path.split("."), cur = o;
+  for (var i = 0; i < parts.length - 1; i++) {
+    var p = (cur instanceof Array) ? +parts[i] : parts[i];
+    var next = parts[i + 1];
+    if (cur[p] === null || typeof cur[p] !== "object") {
+      cur[p] = /^\d+$/.test(next) ? [] : {};
     }
-    var last = parts[parts.length - 1];
-    cur[(cur instanceof Array) ? +last : last] = m[path];
-  });
+    cur = cur[p];
+  }
+  var last = parts[parts.length - 1];
+  cur[(cur instanceof Array) ? +last : last] = v;
+}
+function mergeInto(orig, m) {
+  // Write only the edited leaves into a deep clone, preserving the file's
+  // key order so saves produce minimal diffs. Untouched keys keep whatever
+  // is in the freshly fetched file.
+  var o = JSON.parse(JSON.stringify(orig));
+  Object.keys(m).forEach(function (path) { setPath(o, path, m[path]); });
   return o;
 }
 function token() { return localStorage.getItem("blog-admin-token") || ""; }
@@ -51,7 +87,10 @@ async function api(method, path, body) {
   var opt = { method: method,
     headers: { "Accept": "application/vnd.github+json",
                "Authorization": "Bearer " + token() } };
-  if (body !== undefined) opt.body = JSON.stringify(body);
+  if (body !== undefined) {
+    opt.headers["Content-Type"] = "application/json";
+    opt.body = JSON.stringify(body);
+  }
   var r = await fetch(API + path, opt);
   if (!r.ok) {
     var t = await r.text();
@@ -68,8 +107,9 @@ async function getFile(path) {
 async function putFile(path, text, sha, message) {
   var body = { message: message, content: b64e(text), branch: BRANCH };
   if (sha) body.sha = sha; // new files (images, posts) are created without a sha
-  await api("PUT", path, body);
-  log("saved " + path);
+  var res = await api("PUT", path, body);
+  log("saved " + path + (res && res.commit ? " · " + res.commit.sha.slice(0, 7) : ""));
+  return res;
 }
 function slugify(s) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "untitled";
@@ -95,6 +135,7 @@ async function readUpload(input) {
   if (!input.files || !input.files[0]) return null;
   var f = input.files[0];
   if (!/\.(png|jpe?g|gif|webp|svg)$/i.test(f.name)) throw new Error("image must be png/jpg/gif/webp/svg");
+  if (f.size > 8 * 1024 * 1024) throw new Error("image is larger than 8 MB — resize it first");
   var name = f.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
   var dataUrl = await new Promise(function (res, rej) {
     var r = new FileReader();
@@ -173,16 +214,32 @@ async function verify() {
     return false;
   }
   try {
-    var r = await fetch("https://api.github.com/rate_limit",
-      { headers: { "Authorization": "Bearer " + token() } });
-    if (!r.ok) throw new Error("GitHub rejected the token (HTTP " + r.status + ")");
+    // /rate_limit accepts any well-formed token, including ones that cannot
+    // write to this repo — that is how a read-only token "verified" and then
+    // failed every save. Check the repo's own permissions instead.
+    var r = await fetch("https://api.github.com/repos/" + OWNER + "/" + REPO,
+      { headers: { "Authorization": "Bearer " + token(),
+                   "Accept": "application/vnd.github+json" } });
+    if (r.status === 401) {
+      localStorage.removeItem("blog-admin-token");
+      throw new Error("GitHub rejected the token — it has been forgotten, paste a valid one");
+    }
+    if (!r.ok) throw new Error("GitHub answered HTTP " + r.status + " for " + OWNER + "/" + REPO);
+    var j = await r.json();
+    var canWrite = !!(j.permissions && j.permissions.push);
+    if (!canWrite) {
+      setLocked(true);
+      $("token-status").textContent = "token verified but cannot write to " + OWNER + "/" + REPO;
+      log("ERROR: this token is read-only for this repo — it needs Contents read & write");
+      return false;
+    }
     setLocked(false);
-    $("token-status").textContent = "token verified — unlocked";
+    $("token-status").textContent = "token verified — read & write unlocked";
     armLock();
     return true;
   } catch (e) {
     setLocked(true);
-    $("token-status").textContent = "offline or rejected token";
+    $("token-status").textContent = e.message;
     log("ERROR: " + e.message);
     return false;
   }
@@ -203,12 +260,27 @@ $("token-clear").onclick = function () {
 };
 
 // ---- text tab ----
-var contentCache = null;
-async function loadText() {
-  var r = await fetch(RAW + "content.json");
-  if (!r.ok) throw new Error("could not load content.json: " + r.status);
-  contentCache = await r.json();
-  var m = flat(contentCache), box = $("fields");
+var contentCache = null;     // parsed content.json as loaded
+var contentSnapshot = null;  // flat map the form was built from
+
+async function readContent() {
+  // Read through the Contents API first. raw.githubusercontent.com is
+  // CDN-cached for five minutes (cache-control: max-age=300), so the form
+  // could be built from an older file than the one the save merged into —
+  // every untouched field then reverted whatever had landed in between.
+  try {
+    var f = await getFile("content.json");
+    return { sha: f.sha, text: f.text };
+  } catch (e) {
+    var r = await fetch(RAW + "content.json?t=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) throw new Error("could not load content.json (HTTP " + r.status + ")");
+    return { sha: null, text: await r.text() };
+  }
+}
+function renderText(json) {
+  contentCache = json;
+  var m = flat(json), box = $("fields");
+  contentSnapshot = Object.assign({}, m);
   box.textContent = "";
   Object.keys(m).sort().forEach(function (k) {
     var lab = document.createElement("label");
@@ -228,24 +300,87 @@ async function loadText() {
     box.appendChild(lab);
     box.appendChild(inp);
   });
-  log("loaded " + Object.keys(m).length + " strings");
+  return Object.keys(m).length;
 }
+async function loadText() {
+  var f = await readContent();
+  log("loaded " + renderText(JSON.parse(f.text)) + " strings");
+}
+function hasUnsavedText() {
+  if (!contentSnapshot) return false;
+  var dirty = false;
+  $("fields").querySelectorAll("input,textarea").forEach(function (el) {
+    if (String(contentSnapshot[el.id.slice(2)]) !== el.value) dirty = true;
+  });
+  return dirty;
+}
+window.addEventListener("beforeunload", function (e) {
+  if (hasUnsavedText()) { e.preventDefault(); e.returnValue = ""; }
+});
+
 $("save-text").onclick = async function () {
   if (!needToken()) return;
+  var btn = this;
+  if (btn.disabled) return;
+  busy(btn, true, "Saving…");
+  status("");
   try {
-    var m = {};
+    if (!contentSnapshot) throw new Error("the text form did not load — press ⌘R and try again");
+    var changed = {};
     $("fields").querySelectorAll("input,textarea").forEach(function (el) {
-      m[el.id.slice(2)] = el.value;
+      var k = el.id.slice(2);
+      if (String(contentSnapshot[k]) === el.value) return; // untouched
+      changed[k] = el.value;
     });
+    if (!Object.keys(changed).length) {
+      status("No changes to save.");
+      return;
+    }
     var cur = await getFile("content.json");
-    await putFile("content.json",
-      JSON.stringify(mergeInto(JSON.parse(cur.text), m), null, 2) + "\n",
-      cur.sha, "Update site text via admin");
-    log("text saved — live in a minute or two");
-  } catch (e) { log("ERROR: " + e.message); }
+    var live = JSON.parse(cur.text), liveFlat = flat(live);
+    var conflict = Object.keys(changed).filter(function (k) {
+      return k in contentSnapshot && k in liveFlat &&
+             String(liveFlat[k]) !== String(contentSnapshot[k]);
+    });
+    if (conflict.length && !confirm(
+        "These fields changed on GitHub since this page loaded:\n\n" +
+        conflict.slice(0, 10).join("\n") +
+        (conflict.length > 10 ? "\n…and " + (conflict.length - 10) + " more" : "") +
+        "\n\nOverwrite them with the values in this form?")) {
+      status("Save cancelled — reload the page to pick up the newer text.", "err");
+      return;
+    }
+    var merged = mergeInto(live, changed);
+    var res = await putFile("content.json",
+      JSON.stringify(merged, null, 2) + "\n", cur.sha, "Update site text via admin");
+    // Re-render from what was actually written so the form, the snapshot and
+    // the repo agree. Otherwise untouched inputs keep the pre-save text and
+    // the next save would write that stale text back.
+    renderText(merged);
+    status("Saved " + Object.keys(changed).length + " field(s) — GitHub Pages rebuilds in about a minute.", "ok");
+    log("text saved" + (res && res.commit ? " · " + res.commit.html_url : ""));
+  } catch (e) {
+    status(e.message, "err");
+    log("ERROR: " + e.message);
+  } finally {
+    busy(btn, false);
+  }
 };
 
 // ---- images select ----
+var imageNames = [];
+function fillImageSelects() {
+  ["p-img", "w-hero"].forEach(function (id) {
+    var sel = $(id), keep = sel.value;
+    sel.textContent = "";
+    imageNames.forEach(function (n) {
+      var o = document.createElement("option");
+      o.value = n; o.textContent = n;
+      sel.appendChild(o);
+    });
+    if (imageNames.indexOf(keep) !== -1) sel.value = keep;
+  });
+}
 async function loadImages() {
   var names = ["about-hero.svg", "post-hero.svg", "project-1.svg",
     "project-2.svg", "project-3.svg", "project-4.svg", "project-5.svg",
@@ -255,38 +390,56 @@ async function loadImages() {
     var live = j.filter(function (f) { return f.type === "file"; }).map(function (f) { return f.name; });
     if (live.length) names = live;
   } catch (e) { log("image list: using built-in set (" + e.message.slice(0, 60) + ")"); }
-  ["p-img", "w-hero"].forEach(function (id) {
-    var sel = $(id);
-    sel.textContent = "";
-    names.forEach(function (n) {
-      var o = document.createElement("option");
-      o.value = n; o.textContent = n;
-      sel.appendChild(o);
-    });
-  });
+  imageNames = names;
+  fillImageSelects();
+}
+// Uploading a second file called photo.png used to PUT an existing path with
+// no sha, which GitHub rejects with 422. Pick a free name instead.
+async function freeImageName(name) {
+  var dot = name.lastIndexOf("."), base = dot > 0 ? name.slice(0, dot) : name, ext = dot > 0 ? name.slice(dot) : "";
+  var candidate = name, n = 2;
+  for (;;) {
+    try {
+      await api("GET", "img/" + encodeURIComponent(candidate) + "?ref=" + BRANCH);
+      candidate = base + "-" + (n++) + ext; // exists -> try the next suffix
+    } catch (e) {
+      if (e.status === 404) return candidate;
+      throw e;
+    }
+  }
 }
 
 // ---- new project ----
 $("save-project").onclick = async function () {
   if (!needToken()) return;
+  var btn = this;
+  if (btn.disabled) return;
+  busy(btn, true, "Publishing…");
+  status("");
   try {
     var name = $("p-name").value.trim(), meta = $("p-meta").value.trim();
     if (!name || !meta) throw new Error("name and meta are required");
     var slug = slugify(name);
-    var up = await readUpload($("p-upload"));
-    var img = up ? up.name : $("p-img").value;
-    if (!confirm("Publish project \"" + name + "\"? This writes several commits to the repo.")) return;
     var paras = [$("p-body1").value.trim(), $("p-body2").value.trim()].filter(Boolean);
     if (!paras.length) throw new Error("at least one paragraph is required");
-    // slug must be free (post file + content.json entry)
-    try { await api("GET", "posts/" + slug + ".html?ref=" + BRANCH); throw new Error("slug posts/" + slug + ".html already exists"); }
-    catch (e) { if (e.status !== 404) throw e; }
-    if (up) {
-      await putFile("img/" + img, up.b64, null, "Add image " + img + " via admin");
-    }
+    var up = await readUpload($("p-upload"));
+    var img = up ? await freeImageName(up.name) : $("p-img").value;
+    if (!img) throw new Error("choose an image");
+    // Preflight: read every file this publish writes before the first
+    // commit, so a taken slug or a missing marker fails cleanly instead of
+    // leaving a half-published project in the repo.
     var cj = await getFile("content.json");
     var j = JSON.parse(cj.text);
     if (j.posts[slug]) throw new Error("content.json already has posts." + slug);
+    try {
+      await api("GET", "posts/" + slug + ".html?ref=" + BRANCH);
+      throw new Error("posts/" + slug + ".html already exists");
+    } catch (e) { if (e.status !== 404) throw e; }
+    var ix = await getFile("index.html");
+    if (ix.text.indexOf(CAROUSEL_END) === -1) throw new Error("ADMIN:CAROUSEL-END marker is missing from index.html");
+    var px = await getFile("projects.html");
+    if (px.text.indexOf(GRID_END) === -1) throw new Error("ADMIN:GRID-END marker is missing from projects.html");
+    if (!confirm("Publish project \"" + name + "\"? This writes several commits to the repo.")) return;
     var idx = j.projects.items.length;
     j.projects.items.push({ name: name, meta: meta });
     var entry = { title: name, meta: meta };
@@ -295,60 +448,81 @@ $("save-project").onclick = async function () {
     j.tabs[slug] = name + " — Luca";
     var o = { slug: slug, img: img, name: name, meta: meta,
               title: name, paras: paras };
+    if (up) await putFile("img/" + img, up.b64, null, "Add image " + img + " via admin");
     await putFile("posts/" + slug + ".html", postPage(o), null,
       "Add project page " + slug + " via admin");
     await putFile("content.json", JSON.stringify(j, null, 2) + "\n",
       cj.sha, "Add project " + slug + " via admin");
-    var ix = await getFile("index.html");
-    if (ix.text.indexOf(CAROUSEL_END) === -1) throw new Error("carousel marker missing in index.html");
     await putFile("index.html",
       ix.text.replace(CAROUSEL_END, carouselFigure(o, idx) + "\n" + CAROUSEL_END),
       ix.sha, "Add project " + slug + " to carousel via admin");
-    var px = await getFile("projects.html");
-    if (px.text.indexOf(GRID_END) === -1) throw new Error("grid marker missing in projects.html");
     await putFile("projects.html",
       px.text.replace(GRID_END, gridTile(o, idx) + "\n" + GRID_END),
       px.sha, "Add project " + slug + " to grid via admin");
+    if (up) { imageNames.push(img); fillImageSelects(); }
+    ["p-name", "p-meta", "p-body1", "p-body2", "p-upload"].forEach(function (id) { $(id).value = ""; });
+    if (!hasUnsavedText()) loadText().catch(function () {});
+    status("Project \"" + name + "\" published — live in about a minute.", "ok");
     log("project published: posts/" + slug + ".html");
-  } catch (e) { log("ERROR: " + e.message); }
+  } catch (e) {
+    status(e.message, "err");
+    log("ERROR: " + e.message);
+  } finally {
+    busy(btn, false);
+  }
 };
 
 // ---- new post ----
 $("save-post").onclick = async function () {
   if (!needToken()) return;
+  var btn = this;
+  if (btn.disabled) return;
+  busy(btn, true, "Publishing…");
+  status("");
   try {
     var title = $("w-title").value.trim(), meta = $("w-meta").value.trim();
     if (!title || !meta) throw new Error("title and meta are required");
     var slug = slugify(title);
-    var up = await readUpload($("w-upload"));
-    var img = up ? up.name : $("w-hero").value;
-    if (!confirm("Publish post \"" + title + "\"? This writes several commits to the repo.")) return;
     var paras = $("w-body").value.split(/\n\s*\n/).map(function (s) { return s.trim(); }).filter(Boolean);
     if (!paras.length) throw new Error("at least one paragraph is required");
-    try { await api("GET", "posts/" + slug + ".html?ref=" + BRANCH); throw new Error("slug posts/" + slug + ".html already exists"); }
-    catch (e) { if (e.status !== 404) throw e; }
-    if (up) {
-      await putFile("img/" + img, up.b64, null, "Add image " + img + " via admin");
-    }
+    var up = await readUpload($("w-upload"));
+    var img = up ? await freeImageName(up.name) : $("w-hero").value;
+    if (!img) throw new Error("choose an image");
+    // Same preflight as projects: nothing is written until every check passes.
     var cj = await getFile("content.json");
     var j = JSON.parse(cj.text);
     if (j.posts[slug]) throw new Error("content.json already has posts." + slug);
+    try {
+      await api("GET", "posts/" + slug + ".html?ref=" + BRANCH);
+      throw new Error("posts/" + slug + ".html already exists");
+    } catch (e) { if (e.status !== 404) throw e; }
+    var ix = await getFile("index.html");
+    if (ix.text.indexOf(WRITING_END) === -1) throw new Error("ADMIN:WRITING-END marker is missing from index.html");
+    if (!confirm("Publish post \"" + title + "\"? This writes several commits to the repo.")) return;
     var entry = { title: title, meta: meta };
     paras.forEach(function (p, i) { entry["body" + (i + 1)] = p; });
     j.posts[slug] = entry;
     j.tabs[slug] = title + " — Luca";
     var o = { slug: slug, img: img, title: title, meta: meta, paras: paras };
+    if (up) await putFile("img/" + img, up.b64, null, "Add image " + img + " via admin");
     await putFile("posts/" + slug + ".html", postPage(o), null,
       "Add post " + slug + " via admin");
     await putFile("content.json", JSON.stringify(j, null, 2) + "\n",
       cj.sha, "Add post " + slug + " via admin");
-    var ix = await getFile("index.html");
-    if (ix.text.indexOf(WRITING_END) === -1) throw new Error("writing marker missing in index.html");
     await putFile("index.html",
       ix.text.replace(WRITING_END, writingRow(o) + "\n" + WRITING_END),
       ix.sha, "Add post " + slug + " to writing list via admin");
+    if (up) { imageNames.push(img); fillImageSelects(); }
+    ["w-title", "w-meta", "w-body", "w-upload"].forEach(function (id) { $(id).value = ""; });
+    if (!hasUnsavedText()) loadText().catch(function () {});
+    status("Post \"" + title + "\" published — live in about a minute.", "ok");
     log("post published: posts/" + slug + ".html");
-  } catch (e) { log("ERROR: " + e.message); }
+  } catch (e) {
+    status(e.message, "err");
+    log("ERROR: " + e.message);
+  } finally {
+    busy(btn, false);
+  }
 };
 
 setLocked(true);

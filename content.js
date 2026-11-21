@@ -16,6 +16,9 @@
     document.querySelectorAll("[data-content]").forEach(function (el) {
       var v = m[el.getAttribute("data-content")];
       if (v === undefined) return;
+      // An empty value means "none" for list items (the skills chips):
+      // hide the item instead of leaving an empty pill behind.
+      if (v === "" && el.tagName === "LI") { el.style.display = "none"; return; }
       if (el.tagName === "META") el.setAttribute("content", v);
       else if (el.tagName === "TITLE") document.title = v;
       else el.innerHTML = v;

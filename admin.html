@@ -22,6 +22,11 @@
   .admin button.ghost { background: none; color: var(--ink); border-color: var(--line); }
   #log { white-space: pre-wrap; font-size: 13px; border: 1px solid var(--line);
     border-radius: 8px; padding: 10px 12px; margin-top: 24px; min-height: 60px; }
+  #status { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+    z-index: 20; max-width: min(92vw, 620px); padding: 10px 18px; border-radius: 999px;
+    background: var(--ink); color: var(--bg); font-size: 14px; line-height: 1.4;
+    box-shadow: 0 6px 24px rgba(0,0,0,.18); }
+  #status.err { background: var(--bg); color: var(--ink); border: 1px solid var(--ink); }
   #fields label { font-family: monospace; font-size: 12px; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } }
@@ -49,9 +54,9 @@
     <p>Needs a token with <strong>Contents read &amp; write on this repo
     only</strong> (classic token: <strong>public_repo</strong> scope, short
     expiry). It lives only in this browser's local storage, the panel stays
-    hidden until the token verifies, and it auto-locks after 15 idle minutes.
-    Real security comes from the token + token scope — this page itself is
-    public, like everything on a static site.</p>
+    hidden until the token is checked against this repo, and it auto-locks
+    after 15 idle minutes. Real security comes from the token + token scope —
+    this page itself is public, like everything on a static site.</p>
     <label for="token">Token</label>
     <input type="password" id="token" autocomplete="off" placeholder="ghp_…">
     <div>
@@ -64,7 +69,9 @@
   <section id="text" hidden>
     <h2>Site text</h2>
     <p>Every string from <code>content.json</code>. Edit, save, done.
-    Click a key to open that exact text on the site, highlighted.</p>
+    Click a key to open that exact text on the site, highlighted.
+    Only changed fields are written, so saving can't undo other edits.
+    Leave a skill field empty to hide that chip.</p>
     <div id="fields"><p>Loading…</p></div>
     <button id="save-text" type="button">Save text</button>
   </section>
@@ -99,6 +106,7 @@
   </section>
 
   <pre id="log" aria-live="polite"></pre>
+  <div id="status" role="status" aria-live="polite" hidden></div>
 </main>
 <script src="admin.js" defer></script>
 </body>

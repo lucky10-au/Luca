@@ -33,6 +33,13 @@ SVG art in `img/`. Live at https://lucky10-au.github.io/Luca/ via GitHub Pages
   ~3s (highlight block at the end of `content.js`; falls back to the page
   h1 for `<title>` keys). Key→page mapping lives in `pageFor()` in
   `admin.js`.
+- Admin reliability rules (2026-11-21): read `content.json` through the
+  Contents API, never `raw.githubusercontent.com` (CDN-cached 300s — a stale
+  form used to revert newer commits); save only fields the user changed;
+  verify tokens against the repo's `permissions.push`, not `/rate_limit`;
+  preflight every file/marker a publish touches before the first commit.
+  An empty string for a list item (`home.about.skills.N`) hides that `<li>`,
+  so clearing a skill removes the chip instead of leaving an empty pill.
 - NOTE 2026-10-01: self-host production files (`Dockerfile`, `Caddyfile`,
   `compose.yml`) were deliberately deleted — Pages is the deploy target. Do
   not reintroduce without owner approval.
